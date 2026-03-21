@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIナレッジバンク 活用分析ダッシュボード</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=DM+Sans:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--bg2:#f8f9fb;--card:#fff;--border:#e5e7eb;--border2:#d1d5db;--tx:#111827;--tx2:#4b5563;--tx3:#9ca3af;--o:#6366f1;--o2:#818cf8;--o3:#4f46e5;--b:#2563eb;--g:#059669;--g2:#34d399;--r:#dc2626;--y:#d97706;--p:#7c3aed;--c:#0891b2;--pk:#ec4899;--shadow:0 1px 3px rgba(0,0,0,.06);--shadow2:0 4px 6px rgba(0,0,0,.05);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans JP','DM Sans',sans-serif;background:var(--bg2);color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;}
+.W{max-width:1400px;margin:0 auto;padding:24px;}
+.header{text-align:center;padding:48px 24px 36px;background:linear-gradient(135deg,#312e81 0%,#4338ca 40%,#6366f1 100%);color:#fff;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;top:-50%;right:-20%;width:400px;height:400px;background:rgba(255,255,255,.04);border-radius:50%;}
+.header h1{font-size:2rem;font-weight:900;letter-spacing:-.02em;position:relative;z-index:1;}.header h1 span{color:#c7d2fe;}
+.header .sub{color:rgba(255,255,255,.7);font-size:.9rem;margin-top:4px;font-weight:300;position:relative;z-index:1;}
+.header .badge{display:inline-block;margin-top:12px;padding:5px 18px;border:1px solid rgba(255,255,255,.35);border-radius:100px;font-size:.8rem;color:rgba(255,255,255,.9);font-weight:500;position:relative;z-index:1;}
+.S{margin-top:48px;padding-top:28px;border-top:2px solid var(--border);}
+.SH{display:flex;align-items:center;gap:12px;}
+.SN{width:30px;height:30px;background:var(--o);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;}
+.ST{font-size:1.35rem;font-weight:700;}.SD{color:var(--tx2);margin-top:6px;font-size:.88rem;margin-left:42px;}
+.G{display:grid;gap:16px;margin-top:20px;}.g2{grid-template-columns:repeat(2,1fr);}.g3{grid-template-columns:repeat(3,1fr);}.g4{grid-template-columns:repeat(4,1fr);}.g5{grid-template-columns:repeat(5,1fr);}
+@media(max-width:960px){.g2,.g3,.g4,.g5{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.g2,.g3,.g4,.g5{grid-template-columns:1fr;}}
+.C{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow);transition:box-shadow .2s;}.C:hover{box-shadow:var(--shadow2);}
+.Cl{font-size:.72rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;font-weight:500;}
+.Cv{font-size:1.7rem;font-weight:900;font-family:'DM Sans',sans-serif;margin-top:2px;}.Cv small{font-size:.78rem;color:var(--tx3);font-weight:400;}
+.Cs{font-size:.76rem;margin-top:2px;color:var(--tx2);}
+.B{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-top:20px;box-shadow:var(--shadow);}
+.B h3{font-size:.95rem;font-weight:700;margin-bottom:4px;}.B .cn{font-size:.75rem;color:var(--tx3);margin-bottom:12px;}
+canvas{max-height:360px;}
+.bar-chart{margin-top:12px;}.bar-row{display:flex;align-items:center;margin-bottom:8px;}
+.bar-label{width:180px;text-align:right;padding-right:14px;font-size:.78rem;color:var(--tx2);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-wrap{flex:1;height:32px;background:var(--bg2);border-radius:6px;overflow:hidden;position:relative;}
+.bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 10px;font-size:.75rem;font-weight:700;font-family:'DM Sans',sans-serif;color:#fff;transition:width .6s ease;min-width:2px;}
+.bar-valid{background:var(--o);border-radius:6px;}
+.bar-val{width:90px;text-align:right;font-size:.75rem;color:var(--tx3);padding-left:10px;flex-shrink:0;font-family:'DM Sans',sans-serif;font-weight:600;}
+.tbl{width:100%;border-collapse:collapse;margin-top:14px;font-size:.82rem;}
+.tbl th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--tx3);font-weight:500;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);}.tbl tr:hover td{background:var(--bg2);}
+.tbl .n{font-family:'DM Sans',sans-serif;font-weight:600;text-align:right;}.tbl .rank{width:36px;text-align:center;font-family:'DM Sans',sans-serif;font-weight:700;color:var(--tx3);}
+.pill{display:inline-block;padding:2px 10px;border-radius:100px;font-size:.7rem;font-weight:600;}
+.pill-g{background:#d1fae5;color:#065f46;}.pill-y{background:#fef3c7;color:#92400e;}.pill-r{background:#fee2e2;color:#991b1b;}
+.rate-bar{display:inline-flex;width:60px;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;vertical-align:middle;margin-left:6px;}
+.rate-fill{height:100%;background:var(--o);border-radius:3px;}
+.highlight{background:linear-gradient(135deg,rgba(99,102,241,.06),rgba(99,102,241,.02));border:1px solid rgba(99,102,241,.18);border-radius:14px;padding:24px;margin-top:20px;}
+.highlight h3{color:var(--o);font-size:1rem;margin-bottom:10px;}.highlight p{color:var(--tx2);font-size:.88rem;line-height:1.8;}.highlight strong{color:var(--tx);font-weight:700;}
+.footer{text-align:center;padding:40px 24px;color:var(--tx3);font-size:.72rem;border-top:1px solid var(--border);margin-top:56px;}
+.metric-row{display:flex;align-items:baseline;gap:8px;margin-top:4px;}
+.trend-up{color:var(--g);font-size:.78rem;font-weight:600;}.trend-down{color:var(--r);font-size:.78rem;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="header">
+<h1><span>AI</span>ナレッジバンク 活用分析ダッシュボード</h1>
+<div class="sub">LIFEFUND Corporation - AI活用事例の定量分析レポート</div>
+<div class="badge">集計期間：2026年01月 〜 2026年03月（3ヶ月）</div>
+</div>
+<div class="W">
+
+<div class="S"><div class="SH"><div class="SN">1</div><h2 class="ST">全社サマリー</h2></div>
+<p class="SD">AI活用事例の全社集計。提出数・削減時間の全体像をつかむ</p>
+<div class="G g4" style="margin-top:20px;">
+<div class="C"><div class="Cl">事例件数</div><div class="Cv">177</div><div class="Cs">全部署からの事例投稿</div></div>
+<div class="C"><div class="Cl">参加ユーザー</div><div class="Cv" style="color:var(--o);">31<small>名</small></div><div class="Cs">11部署から提出</div></div>
+<div class="C"><div class="Cl">参加部署</div><div class="Cv" style="color:var(--b);">11</div><div class="Cs">事例提出のある部署数</div></div>
+<div class="C"><div class="Cl">年間削減時間（推定）</div><div class="Cv" style="color:var(--p);">7,019<small>h</small></div><div class="Cs">≒ <strong>877.4人日</strong>（8h/日換算）</div></div>
+</div>
+<div class="highlight" style="margin-top:20px;"><h3>時間削減の内訳</h3>
+<p>時間削減を定量計算できた事例は <strong>154件</strong>。加えて「時間削減ではなく品質向上」が <strong>20件</strong>、「測定できない・不明」が <strong>3件</strong> あり、実際の効果はさらに大きいと見込まれます。</p></div>
+</div>
+
+<div class="S"><div class="SH"><div class="SN">2</div><h2 class="ST">月次推移</h2></div>
+<p class="SD">月ごとの提出件数の推移。組織への浸透度を時系列で可視化</p>
+<div class="G g3" style="margin-top:20px;"><div class="C">
+<div class="Cl">2026年01月</div>
+<div class="Cv">46<small>件</small></div>
+</div><div class="C">
+<div class="Cl">2026年02月</div>
+<div class="Cv">69<small>件</small></div><div class="metric-row"><span class="trend-up">▲ 50%</span><span class="Cs">前月比</span></div>
+</div><div class="C">
+<div class="Cl">2026年03月</div>
+<div class="Cv">62<small>件</small></div><div class="metric-row"><span class="trend-down">▼ 10%</span><span class="Cs">前月比</span></div>
+</div></div>
+<div class="B"><h3>月別提出件数</h3><p class="cn">月ごとの事例件数推移</p><canvas id="chartMonthly"></canvas></div>
+</div>
+
+<div class="S"><div class="SH"><div class="SN">3</div><h2 class="ST">部署別分析</h2></div>
+<p class="SD">部署ごとの提出数を比較。AI活用が浸透している部署を把握</p>
+<div class="B"><h3>部署別 提出件数</h3><p class="cn">部署ごとの事例件数</p><div class="bar-chart" id="deptBars"></div></div>
+<div class="B"><h3>部署別 1人あたり提出件数</h3><p class="cn">部署の在籍人数で提出件数を割った値。人数規模に依らない公平な比較</p><div class="bar-chart"><div class="bar-row"><div class="bar-label">経営戦略室</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:100.0%">10.5</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(21件÷2名)</span></div></div><div class="bar-row"><div class="bar-label">マーケティング課</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:85.7%">9.0</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(45件÷5名)</span></div></div><div class="bar-row"><div class="bar-label">組織人事課</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:66.7%">7.0</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(7件÷1名)</span></div></div><div class="bar-row"><div class="bar-label">不動産課</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:60.0%">6.3</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(19件÷3名)</span></div></div><div class="bar-row"><div class="bar-label">設計課（スタイリスト）</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:42.9%">4.5</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(9件÷2名)</span></div></div><div class="bar-row"><div class="bar-label">建設技術統括部</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:28.6%">3.0</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(3件÷1名)</span></div></div><div class="bar-row"><div class="bar-label">設計課（設計）</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:27.6%">2.9</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(20件÷7名)</span></div></div><div class="bar-row"><div class="bar-label">建設課</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:22.9%">2.4</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(26件÷11名)</span></div></div><div class="bar-row"><div class="bar-label">業務管理課</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:19.0%">2.0</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(4件÷2名)</span></div></div><div class="bar-row"><div class="bar-label">PG｜アドバイザー課</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:16.2%">1.7</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(10件÷6名)</span></div></div><div class="bar-row"><div class="bar-label">ARRCH｜アドバイザー課</div>
+<div class="bar-wrap"><div class="bar-fill bar-valid" style="width:12.4%">1.3</div></div>
+<div class="bar-val"><small>件/人</small> <span style="font-size:.7rem;color:var(--tx3);">(13件÷10名)</span></div></div></div></div>
+<div class="highlight"><h3>部署別の特徴</h3><p><strong>マーケティング課</strong>が45件でトップ。 <strong>建設課</strong>・<strong>経営戦略室</strong>・<strong>設計課（設計）</strong>も積極的に投稿。</p></div>
+</div>
+
+<div class="S"><div class="SH"><div class="SN">4</div><h2 class="ST">AIツール別分析</h2></div>
+<p class="SD">利用ツールの分布。どのツールが多く使われているか</p>
+<div class="B" style="margin-top:20px;"><h3>利用ツール分布</h3><p class="cn">提出件数（複数選択を分割カウント）</p><canvas id="chartTools"></canvas></div>
+<div class="highlight"><h3>ツール活用の傾向</h3>
+<p><strong>Gemini</strong>が132件で最多。<strong>(Gems)</strong>・<strong>NotebookLM</strong>も活発に利用。</p></div>
+</div>
+
+<div class="S"><div class="SH"><div class="SN">5</div><h2 class="ST">業務フェーズ & 活用目的</h2></div>
+<p class="SD">どの業務工程で、どんな目的でAIが使われているか。横展開のヒントを探る</p>
+<div class="G g2" style="margin-top:20px;">
+<div class="B" style="margin-top:0;"><h3>業務フェーズ別</h3><p class="cn">AI活用が多い業務工程</p><canvas id="chartPhase"></canvas></div>
+<div class="B" style="margin-top:0;"><h3>活用目的別</h3><p class="cn">AIの使い方の分類</p><canvas id="chartPurpose"></canvas></div>
+</div></div>
+
+<div class="S"><div class="SH"><div class="SN">6</div><h2 class="ST">時間削減効果の分布</h2></div>
+<p class="SD">1件あたりの削減時間と、その業務の発生頻度。インパクトの大きい活用パターンを特定</p>
+<div class="G g2" style="margin-top:20px;">
+<div class="B" style="margin-top:0;"><h3>1件あたり削減時間</h3><p class="cn">有効事例のうち、時間削減を定量評価できたもの</p><canvas id="chartTimeDist"></canvas></div>
+<div class="B" style="margin-top:0;"><h3>業務の発生頻度</h3><p class="cn">その業務がどれくらいの頻度で発生するか</p><canvas id="chartFreqDist"></canvas></div>
+</div></div>
+
+<div class="S"><div class="SH"><div class="SN">7</div><h2 class="ST">個人別ランキング</h2></div>
+<p class="SD">提出者ごとの事例件数。AI活用の社内リーダーを把握</p>
+<div class="B"><h3>提出者ランキング（上位15名）</h3><p class="cn">事例件数順</p>
+<table class="tbl"><thead><tr><th class="rank">#</th><th>名前</th><th>部署</th><th class="n">件数</th></tr></thead>
+<tbody><tr>
+<td class="rank">&#x1F947;</td><td><strong>藤原 香織</strong><br><span style="font-size:.7rem;color:var(--tx3);">係長</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">マーケティング課</td>
+<td class="n">21</td></tr><tr>
+<td class="rank">&#x1F948;</td><td><strong>石野 祐太朗</strong><br><span style="font-size:.7rem;color:var(--tx3);">係長</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">経営戦略室</td>
+<td class="n">21</td></tr><tr>
+<td class="rank">&#x1F949;</td><td><strong>森下 秀之</strong><br><span style="font-size:.7rem;color:var(--tx3);">一般</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">建設課</td>
+<td class="n">10</td></tr><tr>
+<td class="rank">4</td><td><strong>髙松 柚子</strong><br><span style="font-size:.7rem;color:var(--tx3);">一般</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">マーケティング課</td>
+<td class="n">10</td></tr><tr>
+<td class="rank">5</td><td><strong>添田 岳人</strong><br><span style="font-size:.7rem;color:var(--tx3);">一般</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">設計課（設計）</td>
+<td class="n">9</td></tr><tr>
+<td class="rank">6</td><td><strong>磯口 耕大</strong><br><span style="font-size:.7rem;color:var(--tx3);">一般</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">不動産課</td>
+<td class="n">8</td></tr><tr>
+<td class="rank">7</td><td><strong>酒井 太希</strong><br><span style="font-size:.7rem;color:var(--tx3);">一般</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">設計課（設計）</td>
+<td class="n">8</td></tr><tr>
+<td class="rank">8</td><td><strong>宇田 身江子</strong><br><span style="font-size:.7rem;color:var(--tx3);">課長</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">マーケティング課</td>
+<td class="n">8</td></tr><tr>
+<td class="rank">9</td><td><strong>成山 起輝</strong><br><span style="font-size:.7rem;color:var(--tx3);">一般</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">不動産課</td>
+<td class="n">7</td></tr><tr>
+<td class="rank">10</td><td><strong>花畑 友美</strong><br><span style="font-size:.7rem;color:var(--tx3);">一般</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">マーケティング課</td>
+<td class="n">6</td></tr><tr>
+<td class="rank">11</td><td><strong>神谷 信慶</strong><br><span style="font-size:.7rem;color:var(--tx3);">一般</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">建設課</td>
+<td class="n">6</td></tr><tr>
+<td class="rank">12</td><td><strong>川島 隆義</strong><br><span style="font-size:.7rem;color:var(--tx3);">課長</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">組織人事課</td>
+<td class="n">6</td></tr><tr>
+<td class="rank">13</td><td><strong>大峰 佑月</strong><br><span style="font-size:.7rem;color:var(--tx3);">係長</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">ARRCH｜アドバイザー課</td>
+<td class="n">6</td></tr><tr>
+<td class="rank">14</td><td><strong>松田 美乃里</strong><br><span style="font-size:.7rem;color:var(--tx3);">一般</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">設計課（スタイリスト）</td>
+<td class="n">5</td></tr><tr>
+<td class="rank">15</td><td><strong>三村 賢澄</strong><br><span style="font-size:.7rem;color:var(--tx3);">一般</span></td>
+<td style="font-size:.8rem;color:var(--tx2);">PG｜アドバイザー課</td>
+<td class="n">5</td></tr></tbody></table></div></div>
+
+
+<div class="S"><div class="SH"><div class="SN">8</div><h2 class="ST">部署別参加率（HRBrain連携）</h2></div>
+<p class="SD">HRBrain社員マスタと突合。全社員のうち何%がAI活用事例を提出しているか</p>
+<div class="G g3" style="margin-top:20px;"><div class="C"><div class="Cl">全社参加率</div>
+<div class="Cv" style="color:var(--o);">60%</div>
+<div class="Cs">30名 / 50名</div></div>
+<div class="C"><div class="Cl">提出済みユーザー</div><div class="Cv" style="color:var(--g);">30<small>名</small></div></div>
+<div class="C"><div class="Cl">全在籍社員</div><div class="Cv">50<small>名</small></div></div>
+</div>
+<div class="B"><h3>部署別 参加率</h3><p class="cn">提出者数 / 部署全社員数。右の数値は参加率</p>
+<div class="bar-chart"><div class="bar-row"><div class="bar-label">経営戦略室</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:18.2%">2/2</div></div></div>
+<div class="bar-val"><span class="pill pill-g">100%</span></div></div><div class="bar-row"><div class="bar-label">設計課（スタイリスト）</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:18.2%">2/2</div></div></div>
+<div class="bar-val"><span class="pill pill-g">100%</span></div></div><div class="bar-row"><div class="bar-label">建設技術統括部</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:9.1%">1/1</div></div></div>
+<div class="bar-val"><span class="pill pill-g">100%</span></div></div><div class="bar-row"><div class="bar-label">組織人事課</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:9.1%">1/1</div></div></div>
+<div class="bar-val"><span class="pill pill-g">100%</span></div></div><div class="bar-row"><div class="bar-label">マーケティング課</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:36.4%">4/5</div></div></div>
+<div class="bar-val"><span class="pill pill-g">80%</span></div></div><div class="bar-row"><div class="bar-label">不動産課</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:18.2%">2/3</div></div></div>
+<div class="bar-val"><span class="pill pill-y">67%</span></div></div><div class="bar-row"><div class="bar-label">建設課</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:63.6%">7/11</div></div></div>
+<div class="bar-val"><span class="pill pill-y">64%</span></div></div><div class="bar-row"><div class="bar-label">PG｜アドバイザー課</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:27.3%">3/6</div></div></div>
+<div class="bar-val"><span class="pill pill-y">50%</span></div></div><div class="bar-row"><div class="bar-label">業務管理課</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:9.1%">1/2</div></div></div>
+<div class="bar-val"><span class="pill pill-y">50%</span></div></div><div class="bar-row"><div class="bar-label">設計課（設計）</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:27.3%">3/7</div></div></div>
+<div class="bar-val"><span class="pill pill-r">43%</span></div></div><div class="bar-row"><div class="bar-label">ARRCH｜アドバイザー課</div>
+<div class="bar-wrap"><div style="display:flex;height:100%"><div class="bar-fill bar-valid" style="width:36.4%">4/10</div></div></div>
+<div class="bar-val"><span class="pill pill-r">40%</span></div></div></div></div></div>
+
+<div class="S"><div class="SH"><div class="SN">9</div><h2 class="ST">役職・グレード別分析（HRBrain連携）</h2></div>
+<p class="SD">役職やグレード（等級）ごとのAI活用傾向を把握</p>
+<div class="G g2" style="margin-top:20px;">
+<div class="B" style="margin-top:0;"><h3>役職別 提出件数</h3><p class="cn">役職ごとの事例件数</p><canvas id="chartPosition"></canvas></div>
+<div class="B" style="margin-top:0;"><h3>グレード別 提出件数</h3><p class="cn">等級ごとの事例件数</p><canvas id="chartGrade"></canvas></div>
+</div></div>
+
+<div class="S"><div class="SH"><div class="SN">10</div><h2 class="ST">年齢別分析（HRBrain連携）</h2></div>
+<p class="SD">年齢層ごとのAI活用傾向。若手とベテランの違いを可視化</p>
+<div class="B"><h3>年齢別 提出件数</h3><p class="cn">年齢層ごとの事例件数</p><canvas id="chartAge"></canvas></div></div>
+
+<div class="S"><div class="SH"><div class="SN">11</div><h2 class="ST">未提出者リスト（HRBrain連携）</h2></div>
+<p class="SD">部署ごとに、まだナレッジバンクに事例を投稿していない社員を一覧表示</p>
+<div class="B"><h3>部署別 未提出者</h3><p class="cn">在籍社員のうち、期間中に1件も提出がない社員</p>
+<div style="margin-bottom:12px;"><strong style="font-size:.85rem;">ARRCH｜アドバイザー課</strong> <span style="font-size:.75rem;color:var(--tx3);">(6名)</span><div style="margin-top:4px;"><span class="tag">寺田 結音</span><span class="tag">小林 直希</span><span class="tag">白栁 愛菜</span><span class="tag">藤田 瑛二</span><span class="tag">乗松 一聖</span><span class="tag">藤原 由乃</span></div></div><div style="margin-bottom:12px;"><strong style="font-size:.85rem;">PG｜アドバイザー課</strong> <span style="font-size:.75rem;color:var(--tx3);">(3名)</span><div style="margin-top:4px;"><span class="tag">森 秀樹</span><span class="tag">糸繰 優介</span><span class="tag">袴田 晴久</span></div></div><div style="margin-bottom:12px;"><strong style="font-size:.85rem;">マーケティング課</strong> <span style="font-size:.75rem;color:var(--tx3);">(1名)</span><div style="margin-top:4px;"><span class="tag">栫井 愛実</span></div></div><div style="margin-bottom:12px;"><strong style="font-size:.85rem;">不動産課</strong> <span style="font-size:.75rem;color:var(--tx3);">(1名)</span><div style="margin-top:4px;"><span class="tag">清水 洋希</span></div></div><div style="margin-bottom:12px;"><strong style="font-size:.85rem;">建設課</strong> <span style="font-size:.75rem;color:var(--tx3);">(4名)</span><div style="margin-top:4px;"><span class="tag">佐藤 大樹</span><span class="tag">青島 怜史</span><span class="tag">松下 雄紀</span><span class="tag">渡邊 新</span></div></div><div style="margin-bottom:12px;"><strong style="font-size:.85rem;">業務管理課</strong> <span style="font-size:.75rem;color:var(--tx3);">(1名)</span><div style="margin-top:4px;"><span class="tag">見野 桃子</span></div></div><div style="margin-bottom:12px;"><strong style="font-size:.85rem;">設計課（設計）</strong> <span style="font-size:.75rem;color:var(--tx3);">(4名)</span><div style="margin-top:4px;"><span class="tag">石澤 光宏</span><span class="tag">角谷 啓佳</span><span class="tag">岡村 祥子</span><span class="tag">鈴木 玲</span></div></div></div></div>
+
+
+<div class="S"><div class="SH"><div class="SN">12</div><h2 class="ST">時系列トレンド分析</h2></div>
+<p class="SD">参加者数・ツール利用・浸透度の月別推移。組織全体の変化を時系列で把握</p>
+<div class="G g2" style="margin-top:20px;">
+<div class="B" style="margin-top:0;"><h3>参加者数の推移</h3><p class="cn">月別の新規参加者・累計参加者の推移</p>
+<canvas id="chartParticipantTrend"></canvas></div>
+<div class="B" style="margin-top:0;"><h3>ツール利用推移</h3><p class="cn">主要ツールの月別利用件数</p>
+<canvas id="chartToolTrend"></canvas></div></div></div>
+
+
+<div class="S"><div class="SH"><div class="SN">14</div><h2 class="ST">AI成熟度レベル</h2></div>
+<p class="SD">LIFEFUNDのAIロードマップ（5段階モデル）に対する現在の到達レベル</p>
+<div style="display:grid;gap:12px;margin-top:20px;"><div style="border:1px solid var(--g);background:rgba(5,150,105,.04);border-radius:12px;padding:16px;"><div style="display:flex;align-items:center;"><span style="font-family:DM Sans;font-weight:900;font-size:1.2rem;color:var(--g);">Lv.1</span><strong style="margin-left:8px;">認知・個人利用</strong><span class="pill pill-g" style="margin-left:8px;">達成済</span></div><div class="Cs" style="margin-top:4px;">個人が散発的に利用。ルールなし</div></div><div style="border:1px solid var(--g);background:rgba(5,150,105,.04);border-radius:12px;padding:16px;"><div style="display:flex;align-items:center;"><span style="font-family:DM Sans;font-weight:900;font-size:1.2rem;color:var(--g);">Lv.2</span><strong style="margin-left:8px;">特定部署での活用</strong><span class="pill pill-g" style="margin-left:8px;">達成済</span></div><div class="Cs" style="margin-top:4px;">一部部署で活用。ノウハウ属人化</div></div><div style="border:1px solid var(--g);background:rgba(5,150,105,.04);border-radius:12px;padding:16px;"><div style="display:flex;align-items:center;"><span style="font-family:DM Sans;font-weight:900;font-size:1.2rem;color:var(--g);">Lv.3</span><strong style="margin-left:8px;">全社標準化</strong><span class="pill pill-g" style="margin-left:8px;">達成済</span></div><div class="Cs" style="margin-top:4px;">ガイドライン整備・全社で利用推奨</div></div><div style="border:2px solid var(--o);background:rgba(99,102,241,.06);border-radius:12px;padding:16px;"><div style="display:flex;align-items:center;"><span style="font-family:DM Sans;font-weight:900;font-size:1.2rem;color:var(--o);">Lv.4</span><strong style="margin-left:8px;">自社データ連携</strong><span style="background:var(--o);color:#fff;padding:2px 10px;border-radius:100px;font-size:.7rem;font-weight:700;margin-left:8px;">現在地</span></div><div class="Cs" style="margin-top:4px;">社内データとAI連携。競争優位の源泉</div></div><div style="border:1px dashed var(--y);background:rgba(217,119,6,.04);border-radius:12px;padding:16px;"><div style="display:flex;align-items:center;"><span style="font-family:DM Sans;font-weight:900;font-size:1.2rem;color:var(--tx3);">Lv.5</span><strong style="margin-left:8px;">AIエージェント協働</strong><span class="pill pill-y" style="margin-left:8px;">次の目標</span></div><div class="Cs" style="margin-top:4px;">AIと人が協働。業務設計の再構築</div></div></div>
+<div class="G g2" style="margin-top:20px;">
+<div class="highlight" style="margin-top:0;"><h3>判定根拠</h3><ul style="color:var(--tx2);font-size:.88rem;line-height:2;padding-left:20px;"><li>参加ユーザー 31名（20名以上で全社標準化の条件充足）</li><li>11部署が参加（全社横断的な活用を確認）</li><li>AIガイドライン v1.2 施行済み（2026年2月4日〜）</li><li>HRBrain APIとのデータ連携を実装</li><li>有効事例 177件蓄積（組織ナレッジとして機能）</li></ul></div>
+<div class="highlight" style="margin-top:0;border-color:rgba(217,119,6,.18);background:linear-gradient(135deg,rgba(217,119,6,.06),rgba(217,119,6,.02));"><h3 style="color:var(--y);">次のレベルへのアクション</h3><ul style="color:var(--tx2);font-size:.88rem;line-height:2;padding-left:20px;"><li>AIエージェントによる業務自動化の設計</li><li>AI前提の業務プロセス再設計</li></ul></div>
+</div></div>
+
+
+<div class="S"><div class="SH"><div class="SN">15</div><h2 class="ST">組織浸透スコアカード</h2></div>
+<p class="SD">AI活用の組織浸透度を5指標で定量評価。人事評価基準（ナレッジバンク承認件数）との連動も可視化</p>
+<div class="G g2" style="margin-top:20px;">
+<div class="C" style="text-align:center;"><div class="Cl">浸透度 総合スコア</div><div style="font-size:3rem;font-weight:900;font-family:DM Sans;color:var(--y);margin:8px 0;">74<small style="font-size:1rem;color:var(--tx3);">/ 100</small></div>
+<div class="Cs">5指標の平均</div></div>
+<div class="C"><div class="Cl">人事評価 B+達成</div><div class="Cv" style="color:var(--o);">13<small>名 / 31名</small></div>
+<div class="Cs">有効事例6件以上（B+基準）を達成した提出者</div></div>
+</div>
+<div class="G g4" style="margin-top:16px;"><div class="C"><div class="Cl">参加率</div><div class="Cv" style="color:var(--r);">40<small>%</small></div><div class="Cs">全社員に対する提出者の割合</div></div><div class="C"><div class="Cl">部署カバー率</div><div class="Cv" style="color:var(--g);">100<small>%</small></div><div class="Cs">全部署のうちAI事例がある部署</div></div><div class="C"><div class="Cl">ボリューム</div><div class="Cv" style="color:var(--g);">88<small>%</small></div><div class="Cs">目標件数（200件）に対する達成度</div></div><div class="C"><div class="Cl">B+達成率</div><div class="Cv" style="color:var(--r);">42<small>%</small></div><div class="Cs">人事評価基準B+（6件）の達成者率</div></div></div>
+<div class="B"><h3>人事評価グレード分布</h3><p class="cn">ナレッジバンク有効事例の累計承認件数に基づく人事評価グレード</p>
+<div class="bar-chart"><div class="bar-row"><div class="bar-label" style="width:60px;">S+</div><div class="bar-wrap"><div class="bar-fill" style="width:6.5%;background:#059669;">2名</div></div><div class="bar-val">6%</div></div><div class="bar-row"><div class="bar-label" style="width:60px;">S</div><div class="bar-wrap"><div class="bar-fill" style="width:0%;background:#059669;"></div></div><div class="bar-val" style="color:var(--tx3);">0%</div></div><div class="bar-row"><div class="bar-label" style="width:60px;">A+</div><div class="bar-wrap"><div class="bar-fill" style="width:6.5%;background:#2563eb;">2名</div></div><div class="bar-val">6%</div></div><div class="bar-row"><div class="bar-label" style="width:60px;">A</div><div class="bar-wrap"><div class="bar-fill" style="width:12.9%;background:#2563eb;">4名</div></div><div class="bar-val">13%</div></div><div class="bar-row"><div class="bar-label" style="width:60px;">B+</div><div class="bar-wrap"><div class="bar-fill" style="width:16.1%;background:#6366f1;">5名</div></div><div class="bar-val">16%</div></div><div class="bar-row"><div class="bar-label" style="width:60px;">B</div><div class="bar-wrap"><div class="bar-fill" style="width:25.8%;background:#6366f1;">8名</div></div><div class="bar-val">26%</div></div><div class="bar-row"><div class="bar-label" style="width:60px;">C+</div><div class="bar-wrap"><div class="bar-fill" style="width:6.5%;background:#d97706;">2名</div></div><div class="bar-val">6%</div></div><div class="bar-row"><div class="bar-label" style="width:60px;">C</div><div class="bar-wrap"><div class="bar-fill" style="width:6.5%;background:#d97706;">2名</div></div><div class="bar-val">6%</div></div><div class="bar-row"><div class="bar-label" style="width:60px;">D+</div><div class="bar-wrap"><div class="bar-fill" style="width:19.4%;background:#dc2626;">6名</div></div><div class="bar-val">19%</div></div><div class="bar-row"><div class="bar-label" style="width:60px;">D-</div><div class="bar-wrap"><div class="bar-fill" style="width:0%;background:#dc2626;"></div></div><div class="bar-val" style="color:var(--tx3);">0%</div></div></div></div></div>
+
+<div class="footer">
+<p>AIナレッジバンク 活用分析ダッシュボード - LIFEFUND Corporation</p>
+<p style="margin-top:4px;">データ集計期間：2026年01月〜2026年03月（177件） | 生成日：2026年03月21日</p>
+</div>
+</div>
+
+<script>
+const DATA = {"summary": {"total": 177, "unique_users": 31, "dept_count": 11}, "time_savings": {"calc_count": 154, "total_hours": 7019.2, "total_days": 877.4, "quality_only_count": 20, "unmeasurable_count": 3}, "monthly": {"2026-01": {"total": 46}, "2026-02": {"total": 69}, "2026-03": {"total": 62}}, "monthly_tools": {"2026-01": {"Gemini": 39, "(Gems)": 19, "NotebookLM": 4, "Zapier": 3, "ChatGPT": 3, "Claude": 1}, "2026-02": {"Gemini": 49, "(Gems)": 42, "NotebookLM": 10, "Zapier": 10, "ChatGPT": 4, "Claude": 3}, "2026-03": {"Gemini": 44, "(Gems)": 22, "NotebookLM": 10, "Zapier": 3, "ChatGPT": 6, "Claude": 9}}, "monthly_participants": {"2026-01": {"new": 11, "returning": 9, "active": 12, "cumulative": 11}, "2026-02": {"new": 12, "returning": 18, "active": 21, "cumulative": 23}, "2026-03": {"new": 8, "returning": 15, "active": 16, "cumulative": 31}}, "monthly_depts": {"2026-01": {"マーケティング課": 2, "PG｜アドバイザー課": 1, "ARRCH｜アドバイザー課": 2, "経営戦略室": 1, "組織人事課": 2, "建設課": 1, "業務管理課": 1, "設計課（設計）": 2}, "2026-02": {"マーケティング課": 3, "ARRCH｜アドバイザー課": 2, "経営戦略室": 1, "不動産課": 3, "建設課": 5, "組織人事課": 1, "建設技術統括部": 1, "設計課（スタイリスト）": 2, "業務管理課": 1, "設計課（設計）": 2}, "2026-03": {"マーケティング課": 4, "PG｜アドバイザー課": 2, "経営戦略室": 1, "不動産課": 1, "建設課": 3, "設計課（スタイリスト）": 2, "ARRCH｜アドバイザー課": 2, "設計課（設計）": 1}}, "dept_stats": {"マーケティング課": {"total": 45, "hr_team": "CXデザインチーム", "hr_members": 5}, "建設課": {"total": 26, "hr_team": "アフターチーム", "hr_members": 11}, "経営戦略室": {"total": 21, "hr_team": "経営戦略室", "hr_members": 2}, "設計課（設計）": {"total": 20, "hr_team": "設計チーム", "hr_members": 7}, "不動産課": {"total": 19, "hr_team": "物件王国｜不動産仲介営業", "hr_members": 3}, "ARRCH｜アドバイザー課": {"total": 13, "hr_team": "ARRCHアドバイザーチーム", "hr_members": 10}, "PG｜アドバイザー課": {"total": 10, "hr_team": "PGHOUSEアドバイザーチーム", "hr_members": 6}, "設計課（スタイリスト）": {"total": 9, "hr_team": "スタイリストチーム", "hr_members": 2}, "組織人事課": {"total": 7, "hr_team": "組織人事課", "hr_members": 1}, "業務管理課": {"total": 4, "hr_team": "業務管理チーム", "hr_members": 2}, "建設技術統括部": {"total": 3, "hr_team": "建設技術統括部", "hr_members": 1}}, "tool_stats": {"Gemini": {"total": 132}, "(Gems)": {"total": 83}, "NotebookLM": {"total": 24}, "Zapier": {"total": 16}, "ChatGPT": {"total": 13}, "Claude": {"total": 13}, "Google": {"total": 3}, "AI": {"total": 3}, "Studio": {"total": 3}, "Grok": {"total": 1}, "Python": {"total": 1}, "MANUS": {"total": 1}, "(GPTs)": {"total": 1}, "COPILOT": {"total": 1}, "GAMMA": {"total": 1}}, "phase_stats": {"集客・広報": {"total": 45}, "その他": {"total": 29}, "設計・デザイン": {"total": 29}, "営業・追客": {"total": 17}, "経営・戦略": {"total": 12}, "開発・IT": {"total": 9}, "組織・総務・人事": {"total": 8}, "施工・現場": {"total": 8}, "積算・見積": {"total": 7}, "引渡・アフター": {"total": 6}, "経理・財務": {"total": 5}, "契約・ローン": {"total": 2}}, "purpose_stats": {"代筆・作成": {"total": 35}, "画像・動画・スライド": {"total": 34}, "その他": {"total": 24}, "相談・壁打ち": {"total": 22}, "調査・検索": {"total": 17}, "技術・Excel": {"total": 16}, "要約・読解": {"total": 13}, "校正・チェック": {"total": 10}, "学習・教育": {"total": 6}}, "time_distribution": {"30分〜1時間": 36, "5〜15分": 32, "15〜30分": 29, "1〜3時間": 21, "1〜5分": 21, "時間削減ではなく品質向上": 20, "3時間以上": 15, "測定できない・不明": 3}, "freq_distribution": {"月に数回（年間10〜30回）": 53, "週に数回（年間100〜200回）": 40, "月1回以下（年間10回未満）": 26, "週1回程度（年間約50回）": 23, "毎日（年間約250回）": 13, "一度きり・不定期": 13, "1日に複数回（年間500回以上）": 9}, "person_stats": [{"name": "fujiwara.k", "email": "fujiwara.k@hakuto-k.jp", "dept": "マーケティング課", "total": 21, "full_name": "藤原 香織", "position": "係長", "grade": "G3", "entered_day": "2020/04/01"}, {"name": "ishino.y", "email": "ishino.y@hakuto-k.jp", "dept": "経営戦略室", "total": 21, "full_name": "石野 祐太朗", "position": "係長", "grade": "E4", "entered_day": "2020/10/01"}, {"name": "morishita.h", "email": "morishita.h@hakuto-k.jp", "dept": "建設課", "total": 10, "full_name": "森下 秀之", "position": "一般", "grade": "G4", "entered_day": "2024/06/01"}, {"name": "takamatsu.y", "email": "takamatsu.y@hakuto-k.jp", "dept": "マーケティング課", "total": 10, "full_name": "髙松 柚子", "position": "一般", "grade": "G2", "entered_day": "2024/03/25"}, {"name": "soeda.g", "email": "soeda.g@hakuto-k.jp", "dept": "設計課（設計）", "total": 9, "full_name": "添田 岳人", "position": "一般", "grade": "G2", "entered_day": "2025/02/01"}, {"name": "isoguchi.k", "email": "isoguchi.k@hakuto-k.jp", "dept": "不動産課", "total": 8, "full_name": "磯口 耕大", "position": "一般", "grade": "G2", "entered_day": "2024/10/01"}, {"name": "sakai.t", "email": "sakai.t@hakuto-k.jp", "dept": "設計課（設計）", "total": 8, "full_name": "酒井 太希", "position": "一般", "grade": "G2", "entered_day": "2025/03/01"}, {"name": "uda.m", "email": "uda.m@hakuto-k.jp", "dept": "マーケティング課", "total": 8, "full_name": "宇田 身江子", "position": "課長", "grade": "G5", "entered_day": "2018/05/01"}, {"name": "oishi.t", "email": "oishi.t@hakuto-k.jp", "dept": "不動産課", "total": 7, "full_name": "成山 起輝", "position": "一般", "grade": "G3", "entered_day": "2024/12/01"}, {"name": "hanabata.t", "email": "hanabata.t@hakuto-k.jp", "dept": "マーケティング課", "total": 6, "full_name": "花畑 友美", "position": "一般", "grade": "G2", "entered_day": "2021/06/01"}, {"name": "kamiya.n", "email": "kamiya.n@hakuto-k.jp", "dept": "建設課", "total": 6, "full_name": "神谷 信慶", "position": "一般", "grade": "G2", "entered_day": "2025/06/25"}, {"name": "kawashima.t", "email": "kawashima.t@hakuto-k.jp", "dept": "組織人事課", "total": 6, "full_name": "川島 隆義", "position": "課長", "grade": "G5", "entered_day": "2024/04/22"}, {"name": "omine.y", "email": "omine.y@hakuto-k.jp", "dept": "ARRCH｜アドバイザー課", "total": 6, "full_name": "大峰 佑月", "position": "係長", "grade": "G3", "entered_day": "2021/02/01"}, {"name": "matsuda.m", "email": "matsuda.m@hakuto-k.jp", "dept": "設計課（スタイリスト）", "total": 5, "full_name": "松田 美乃里", "position": "一般", "grade": "G2", "entered_day": "2022/04/01"}, {"name": "mimura.k", "email": "mimura.k@hakuto-k.jp", "dept": "PG｜アドバイザー課", "total": 5, "full_name": "三村 賢澄", "position": "一般", "grade": "G2", "entered_day": "2025/04/16"}, {"name": "morishita.s", "email": "morishita.s@hakuto-k.jp", "dept": "建設課", "total": 5, "full_name": "森下 周太郎", "position": "課長", "grade": "G5", "entered_day": "2022/10/18"}, {"name": "hirano.m", "email": "hirano.m@hakuto-k.jp", "dept": "PG｜アドバイザー課", "total": 4, "full_name": "平野 誠人", "position": "係長", "grade": "G4", "entered_day": "2025/08/01"}, {"name": "ichikawa.t", "email": "ichikawa.t@hakuto-k.jp", "dept": "ARRCH｜アドバイザー課", "total": 4, "full_name": "市川 高裕", "position": "一般", "grade": "G1", "entered_day": "2024/04/01"}, {"name": "mizuno.m", "email": "mizuno.m@hakuto-k.jp", "dept": "設計課（スタイリスト）", "total": 4, "full_name": "水野 萌", "position": "係長", "grade": "G3", "entered_day": "2020/12/01"}, {"name": "mochiduki.k", "email": "mochiduki.k@hakuto-k.jp", "dept": "不動産課", "total": 4, "full_name": "望月 厚治", "position": "課長", "grade": "G4", "entered_day": "2024/06/01"}, {"name": "office", "email": "office@hakuto-k.jp", "dept": "業務管理課", "total": 4, "full_name": "森 美香", "position": "一般", "grade": "G3", "entered_day": "2009/10/01"}, {"name": "kurata.tu", "email": "kurata.tu@hakuto-k.jp", "dept": "建設技術統括部", "total": 3, "full_name": "倉田 剛", "position": "部長", "grade": "G6", "entered_day": "2023/09/01"}, {"name": "ukai.r", "email": "ukai.r@hakuto-k.jp", "dept": "設計課（設計）", "total": 3, "full_name": "鵜飼 玲奈", "position": "係長", "grade": "G3", "entered_day": "2019/04/01"}, {"name": "kato.h", "email": "kato.h@hakuto-k.jp", "dept": "建設課", "total": 2, "full_name": "加藤 宏昭", "position": "一般", "grade": "G4", "entered_day": "2020/12/01"}, {"name": "tanaka.k", "email": "tanaka.k@hakuto-k.jp", "dept": "ARRCH｜アドバイザー課", "total": 2, "full_name": "田中 康太", "position": "係長", "grade": "G3", "entered_day": "2020/08/01"}, {"name": "hashimoto.k", "email": "hashimoto.k@hakuto-k.jp", "dept": "ARRCH｜アドバイザー課", "total": 1, "full_name": "橋本 浩平", "position": "係長", "grade": "G3", "entered_day": "2021/02/01"}, {"name": "hirasawa.a", "email": "hirasawa.a@hakuto-k.jp", "dept": "PG｜アドバイザー課", "total": 1, "full_name": "平澤 明和", "position": "一般", "grade": "G2", "entered_day": "2022/04/01"}, {"name": "jinji", "email": "jinji@hakuto-k.jp", "dept": "組織人事課", "total": 1, "full_name": "川島 隆義", "position": "課長", "grade": "G5", "entered_day": "2024/04/22"}, {"name": "kawahara.k", "email": "kawahara.k@hakuto-k.jp", "dept": "建設課", "total": 1, "full_name": "川原 和輝", "position": "一般", "grade": "G3", "entered_day": "2022/12/01"}, {"name": "okada.m", "email": "okada.m@hakuto-k.jp", "dept": "建設課", "total": 1, "full_name": "岡田 学", "position": "一般", "grade": "G3", "entered_day": "2022/09/01"}, {"name": "suzuki.h", "email": "suzuki.h@hakuto-k.jp", "dept": "建設課", "total": 1, "full_name": "鈴木 寿", "position": "一般", "grade": "G2", "entered_day": "2025/10/30"}], "hr_analytics": {"dept_participation": {"建設課": {"total_members": 11, "submitters": 7, "rate": 64}, "ARRCH｜アドバイザー課": {"total_members": 10, "submitters": 4, "rate": 40}, "設計課（設計）": {"total_members": 7, "submitters": 3, "rate": 43}, "PG｜アドバイザー課": {"total_members": 6, "submitters": 3, "rate": 50}, "マーケティング課": {"total_members": 5, "submitters": 4, "rate": 80}, "不動産課": {"total_members": 3, "submitters": 2, "rate": 67}, "業務管理課": {"total_members": 2, "submitters": 1, "rate": 50}, "経営戦略室": {"total_members": 2, "submitters": 2, "rate": 100}, "設計課（スタイリスト）": {"total_members": 2, "submitters": 2, "rate": 100}, "建設技術統括部": {"total_members": 1, "submitters": 1, "rate": 100}, "組織人事課": {"total_members": 1, "submitters": 1, "rate": 100}}, "position_stats": {"一般": {"total": 89}, "係長": {"total": 62}, "課長": {"total": 23}, "部長": {"total": 3}}, "grade_stats": {"G2": {"total": 59}, "G3": {"total": 43}, "E4": {"total": 21}, "G4": {"total": 20}, "G5": {"total": 19}, "不明": {"total": 8}, "G1": {"total": 4}, "G6": {"total": 3}}, "age_stats": {"20代": {"total": 53}, "30代": {"total": 33}, "40代": {"total": 67}, "50代": {"total": 24}}, "non_submitters": {"ARRCH｜アドバイザー課": ["寺田 結音", "小林 直希", "白栁 愛菜", "藤田 瑛二", "乗松 一聖", "藤原 由乃"], "PG｜アドバイザー課": ["森 秀樹", "糸繰 優介", "袴田 晴久"], "マーケティング課": ["栫井 愛実"], "不動産課": ["清水 洋希"], "建設課": ["佐藤 大樹", "青島 怜史", "松下 雄紀", "渡邊 新"], "業務管理課": ["見野 桃子"], "設計課（設計）": ["石澤 光宏", "角谷 啓佳", "岡村 祥子", "鈴木 玲"]}, "total_active_members": 50, "total_submitters": 30, "company_participation_rate": 60}, "maturity": {"current_level": 4, "levels": [{"level": 1, "name": "認知・個人利用", "desc": "個人が散発的に利用。ルールなし", "achieved": true}, {"level": 2, "name": "特定部署での活用", "desc": "一部部署で活用。ノウハウ属人化", "achieved": true}, {"level": 3, "name": "全社標準化", "desc": "ガイドライン整備・全社で利用推奨", "achieved": true}, {"level": 4, "name": "自社データ連携", "desc": "社内データとAI連携。競争優位の源泉", "achieved": true}, {"level": 5, "name": "AIエージェント協働", "desc": "AIと人が協働。業務設計の再構築", "achieved": false}], "evidence": ["参加ユーザー 31名（20名以上で全社標準化の条件充足）", "11部署が参加（全社横断的な活用を確認）", "AIガイドライン v1.2 施行済み（2026年2月4日〜）", "HRBrain APIとのデータ連携を実装", "有効事例 177件蓄積（組織ナレッジとして機能）"], "next_steps": ["AIエージェントによる業務自動化の設計", "AI前提の業務プロセス再設計"]}, "penetration": {"overall_score": 74, "scores": {"participation": 40, "dept_coverage": 100, "quality": 100, "volume": 88, "standard_rate": 42}, "person_eval": [{"name": "fujiwara.k", "email": "fujiwara.k@hakuto-k.jp", "dept": "マーケティング課", "total": 21, "full_name": "藤原 香織", "position": "係長", "grade": "G3", "entered_day": "2020/04/01", "eval_grade": "S+"}, {"name": "ishino.y", "email": "ishino.y@hakuto-k.jp", "dept": "経営戦略室", "total": 21, "full_name": "石野 祐太朗", "position": "係長", "grade": "E4", "entered_day": "2020/10/01", "eval_grade": "S+"}, {"name": "morishita.h", "email": "morishita.h@hakuto-k.jp", "dept": "建設課", "total": 10, "full_name": "森下 秀之", "position": "一般", "grade": "G4", "entered_day": "2024/06/01", "eval_grade": "A+"}, {"name": "takamatsu.y", "email": "takamatsu.y@hakuto-k.jp", "dept": "マーケティング課", "total": 10, "full_name": "髙松 柚子", "position": "一般", "grade": "G2", "entered_day": "2024/03/25", "eval_grade": "A+"}, {"name": "soeda.g", "email": "soeda.g@hakuto-k.jp", "dept": "設計課（設計）", "total": 9, "full_name": "添田 岳人", "position": "一般", "grade": "G2", "entered_day": "2025/02/01", "eval_grade": "A"}, {"name": "isoguchi.k", "email": "isoguchi.k@hakuto-k.jp", "dept": "不動産課", "total": 8, "full_name": "磯口 耕大", "position": "一般", "grade": "G2", "entered_day": "2024/10/01", "eval_grade": "A"}, {"name": "sakai.t", "email": "sakai.t@hakuto-k.jp", "dept": "設計課（設計）", "total": 8, "full_name": "酒井 太希", "position": "一般", "grade": "G2", "entered_day": "2025/03/01", "eval_grade": "A"}, {"name": "uda.m", "email": "uda.m@hakuto-k.jp", "dept": "マーケティング課", "total": 8, "full_name": "宇田 身江子", "position": "課長", "grade": "G5", "entered_day": "2018/05/01", "eval_grade": "A"}, {"name": "oishi.t", "email": "oishi.t@hakuto-k.jp", "dept": "不動産課", "total": 7, "full_name": "成山 起輝", "position": "一般", "grade": "G3", "entered_day": "2024/12/01", "eval_grade": "B+"}, {"name": "hanabata.t", "email": "hanabata.t@hakuto-k.jp", "dept": "マーケティング課", "total": 6, "full_name": "花畑 友美", "position": "一般", "grade": "G2", "entered_day": "2021/06/01", "eval_grade": "B+"}, {"name": "kamiya.n", "email": "kamiya.n@hakuto-k.jp", "dept": "建設課", "total": 6, "full_name": "神谷 信慶", "position": "一般", "grade": "G2", "entered_day": "2025/06/25", "eval_grade": "B+"}, {"name": "kawashima.t", "email": "kawashima.t@hakuto-k.jp", "dept": "組織人事課", "total": 6, "full_name": "川島 隆義", "position": "課長", "grade": "G5", "entered_day": "2024/04/22", "eval_grade": "B+"}, {"name": "omine.y", "email": "omine.y@hakuto-k.jp", "dept": "ARRCH｜アドバイザー課", "total": 6, "full_name": "大峰 佑月", "position": "係長", "grade": "G3", "entered_day": "2021/02/01", "eval_grade": "B+"}, {"name": "matsuda.m", "email": "matsuda.m@hakuto-k.jp", "dept": "設計課（スタイリスト）", "total": 5, "full_name": "松田 美乃里", "position": "一般", "grade": "G2", "entered_day": "2022/04/01", "eval_grade": "B"}, {"name": "mimura.k", "email": "mimura.k@hakuto-k.jp", "dept": "PG｜アドバイザー課", "total": 5, "full_name": "三村 賢澄", "position": "一般", "grade": "G2", "entered_day": "2025/04/16", "eval_grade": "B"}, {"name": "morishita.s", "email": "morishita.s@hakuto-k.jp", "dept": "建設課", "total": 5, "full_name": "森下 周太郎", "position": "課長", "grade": "G5", "entered_day": "2022/10/18", "eval_grade": "B"}, {"name": "hirano.m", "email": "hirano.m@hakuto-k.jp", "dept": "PG｜アドバイザー課", "total": 4, "full_name": "平野 誠人", "position": "係長", "grade": "G4", "entered_day": "2025/08/01", "eval_grade": "B"}, {"name": "ichikawa.t", "email": "ichikawa.t@hakuto-k.jp", "dept": "ARRCH｜アドバイザー課", "total": 4, "full_name": "市川 高裕", "position": "一般", "grade": "G1", "entered_day": "2024/04/01", "eval_grade": "B"}, {"name": "mizuno.m", "email": "mizuno.m@hakuto-k.jp", "dept": "設計課（スタイリスト）", "total": 4, "full_name": "水野 萌", "position": "係長", "grade": "G3", "entered_day": "2020/12/01", "eval_grade": "B"}, {"name": "mochiduki.k", "email": "mochiduki.k@hakuto-k.jp", "dept": "不動産課", "total": 4, "full_name": "望月 厚治", "position": "課長", "grade": "G4", "entered_day": "2024/06/01", "eval_grade": "B"}, {"name": "office", "email": "office@hakuto-k.jp", "dept": "業務管理課", "total": 4, "full_name": "森 美香", "position": "一般", "grade": "G3", "entered_day": "2009/10/01", "eval_grade": "B"}, {"name": "kurata.tu", "email": "kurata.tu@hakuto-k.jp", "dept": "建設技術統括部", "total": 3, "full_name": "倉田 剛", "position": "部長", "grade": "G6", "entered_day": "2023/09/01", "eval_grade": "C+"}, {"name": "ukai.r", "email": "ukai.r@hakuto-k.jp", "dept": "設計課（設計）", "total": 3, "full_name": "鵜飼 玲奈", "position": "係長", "grade": "G3", "entered_day": "2019/04/01", "eval_grade": "C+"}, {"name": "kato.h", "email": "kato.h@hakuto-k.jp", "dept": "建設課", "total": 2, "full_name": "加藤 宏昭", "position": "一般", "grade": "G4", "entered_day": "2020/12/01", "eval_grade": "C"}, {"name": "tanaka.k", "email": "tanaka.k@hakuto-k.jp", "dept": "ARRCH｜アドバイザー課", "total": 2, "full_name": "田中 康太", "position": "係長", "grade": "G3", "entered_day": "2020/08/01", "eval_grade": "C"}, {"name": "hashimoto.k", "email": "hashimoto.k@hakuto-k.jp", "dept": "ARRCH｜アドバイザー課", "total": 1, "full_name": "橋本 浩平", "position": "係長", "grade": "G3", "entered_day": "2021/02/01", "eval_grade": "D+"}, {"name": "hirasawa.a", "email": "hirasawa.a@hakuto-k.jp", "dept": "PG｜アドバイザー課", "total": 1, "full_name": "平澤 明和", "position": "一般", "grade": "G2", "entered_day": "2022/04/01", "eval_grade": "D+"}, {"name": "jinji", "email": "jinji@hakuto-k.jp", "dept": "組織人事課", "total": 1, "full_name": "川島 隆義", "position": "課長", "grade": "G5", "entered_day": "2024/04/22", "eval_grade": "D+"}, {"name": "kawahara.k", "email": "kawahara.k@hakuto-k.jp", "dept": "建設課", "total": 1, "full_name": "川原 和輝", "position": "一般", "grade": "G3", "entered_day": "2022/12/01", "eval_grade": "D+"}, {"name": "okada.m", "email": "okada.m@hakuto-k.jp", "dept": "建設課", "total": 1, "full_name": "岡田 学", "position": "一般", "grade": "G3", "entered_day": "2022/09/01", "eval_grade": "D+"}, {"name": "suzuki.h", "email": "suzuki.h@hakuto-k.jp", "dept": "建設課", "total": 1, "full_name": "鈴木 寿", "position": "一般", "grade": "G2", "entered_day": "2025/10/30", "eval_grade": "D+"}], "grade_distribution": {"S+": 2, "A+": 2, "A": 4, "B+": 5, "B": 8, "C+": 2, "C": 2, "D+": 6}, "standard_achievers": 13, "total_evaluated": 31, "eval_tiers": [{"grade": "S+", "min": 15, "label": "15件以上"}, {"grade": "S", "min": 12, "label": "12件以上"}, {"grade": "A+", "min": 10, "label": "10件以上"}, {"grade": "A", "min": 8, "label": "8件以上"}, {"grade": "B+", "min": 6, "label": "6件（標準達成）"}, {"grade": "B", "min": 4, "label": "4件以上"}, {"grade": "C+", "min": 3, "label": "3件以上"}, {"grade": "C", "min": 2, "label": "2件（最低ライン）"}, {"grade": "D+", "min": 1, "label": "1件"}, {"grade": "D-", "min": 0, "label": "0件"}]}};
+
+const COLORS = {indigo:'#6366f1',green:'#059669',red:'#dc2626',redLight:'#fca5a5',amber:'#d97706',purple:'#7c3aed',greenBg:'rgba(5,150,105,.1)'};
+const palette = ['#6366f1','#059669','#2563eb','#d97706','#7c3aed','#ec4899','#0891b2','#dc2626','#84cc16','#f97316','#06b6d4','#8b5cf6'];
+Chart.defaults.font.family = "'DM Sans','Noto Sans JP',sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.pointStyleWidth = 10;
+Chart.defaults.plugins.legend.labels.padding = 16;
+
+(function(){
+  var ms=Object.keys(DATA.monthly),ls=ms.map(function(m){return m.replace(/^\d{4}-/,'')+'\u6708'});
+  new Chart(document.getElementById('chartMonthly'),{type:'bar',data:{labels:ls,datasets:[
+    {label:'\u4ef6\u6570',data:ms.map(function(m){return DATA.monthly[m].total}),backgroundColor:COLORS.indigo,borderRadius:6}
+  ]},options:{responsive:true,scales:{x:{grid:{display:false}},y:{beginAtZero:true,title:{display:true,text:'\u4ef6\u6570'},grid:{color:'#f3f4f6'}}},plugins:{legend:{display:false}}}})})();
+
+(function(){
+  var el=document.getElementById('deptBars'),ds=Object.entries(DATA.dept_stats),mx=Math.max.apply(null,ds.map(function(d){return d[1].total}));
+  ds.forEach(function(d){var n=d[0],v=d[1],w=(v.total/mx*100).toFixed(1);
+    el.innerHTML+='<div class="bar-row"><div class="bar-label">'+n+'</div><div class="bar-wrap"><div class="bar-fill bar-valid" style="width:'+w+'%">'+(v.total>2?v.total:'')+'</div></div><div class="bar-val">'+v.total+'<small>\u4ef6</small></div></div>'})})();
+
+(function(){
+  var ts=Object.entries(DATA.tool_stats),ls=ts.map(function(t){return t[0]}),tots=ts.map(function(t){return t[1].total});
+  new Chart(document.getElementById('chartTools'),{type:'doughnut',data:{labels:ls,datasets:[{data:tots,backgroundColor:palette.slice(0,ls.length),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{size:11}}}}}})})();
+
+(function(){
+  var items=Object.entries(DATA.phase_stats);
+  new Chart(document.getElementById('chartPhase'),{type:'bar',data:{labels:items.map(function(i){return i[0]}),datasets:[{label:'\u4ef6\u6570',data:items.map(function(i){return i[1].total}),backgroundColor:COLORS.indigo,borderRadius:4}]},options:{indexAxis:'y',responsive:true,scales:{x:{grid:{color:'#f3f4f6'}},y:{grid:{display:false}}},plugins:{legend:{display:false}}}});
+  var ps=Object.entries(DATA.purpose_stats);
+  new Chart(document.getElementById('chartPurpose'),{type:'bar',data:{labels:ps.map(function(i){return i[0]}),datasets:[{label:'\u4ef6\u6570',data:ps.map(function(i){return i[1].total}),backgroundColor:'#7c3aed',borderRadius:4}]},options:{indexAxis:'y',responsive:true,scales:{x:{grid:{color:'#f3f4f6'}},y:{grid:{display:false}}},plugins:{legend:{display:false}}}})})();
+
+(function(){
+  var td=Object.entries(DATA.time_distribution);
+  new Chart(document.getElementById('chartTimeDist'),{type:'bar',data:{labels:td.map(function(i){return i[0]}),datasets:[{label:'\u4ef6\u6570',data:td.map(function(i){return i[1]}),backgroundColor:palette.slice(0,td.length),borderRadius:6}]},options:{responsive:true,scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#f3f4f6'}}},plugins:{legend:{display:false}}}});
+  var fd=Object.entries(DATA.freq_distribution);
+  new Chart(document.getElementById('chartFreqDist'),{type:'bar',data:{labels:fd.map(function(i){return i[0]}),datasets:[{label:'\u4ef6\u6570',data:fd.map(function(i){return i[1]}),backgroundColor:palette.slice(0,fd.length),borderRadius:6}]},options:{responsive:true,scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#f3f4f6'}}},plugins:{legend:{display:false}}}})})();
+
+if(DATA.hr_analytics){(function(){
+  var ps=Object.entries(DATA.hr_analytics.position_stats||{});
+  if(ps.length&&document.getElementById('chartPosition')){
+    new Chart(document.getElementById('chartPosition'),{type:'bar',data:{labels:ps.map(function(i){return i[0]}),datasets:[{label:'\u4ef6\u6570',data:ps.map(function(i){return i[1].total}),backgroundColor:COLORS.indigo,borderRadius:4}]},options:{indexAxis:'y',responsive:true,scales:{x:{grid:{color:'#f3f4f6'}},y:{grid:{display:false}}},plugins:{legend:{display:false}}}})}
+  var gs=Object.entries(DATA.hr_analytics.grade_stats||{});
+  if(gs.length&&document.getElementById('chartGrade')){
+    new Chart(document.getElementById('chartGrade'),{type:'bar',data:{labels:gs.map(function(i){return i[0]}),datasets:[{label:'\u4ef6\u6570',data:gs.map(function(i){return i[1].total}),backgroundColor:'#7c3aed',borderRadius:4}]},options:{indexAxis:'y',responsive:true,scales:{x:{grid:{color:'#f3f4f6'}},y:{grid:{display:false}}},plugins:{legend:{display:false}}}})}
+  var ag=Object.entries(DATA.hr_analytics.age_stats||{});
+  if(ag.length&&document.getElementById('chartAge')){
+    new Chart(document.getElementById('chartAge'),{type:'bar',data:{labels:ag.map(function(i){return i[0]}),datasets:[{label:'\u4ef6\u6570',data:ag.map(function(i){return i[1].total}),backgroundColor:COLORS.indigo,borderRadius:6}]},options:{responsive:true,scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#f3f4f6'}}},plugins:{legend:{display:false}}}})}
+})()}
+
+// Trend charts
+if(DATA.monthly_participants && document.getElementById('chartParticipantTrend')){
+  (function(){
+    var mp=DATA.monthly_participants,ms=Object.keys(mp),
+        ls=ms.map(function(m){return m.replace(/^\d{4}-/,'')+'\u6708'});
+    new Chart(document.getElementById('chartParticipantTrend'),{type:'bar',data:{labels:ls,datasets:[
+      {label:'\u65b0\u898f\u53c2\u52a0',data:ms.map(function(m){return mp[m].new}),backgroundColor:COLORS.indigo,borderRadius:6,order:2},
+      {label:'\u30ea\u30d4\u30fc\u30bf\u30fc',data:ms.map(function(m){return mp[m].returning}),backgroundColor:'#c7d2fe',borderRadius:6,order:2},
+      {label:'\u7d2f\u8a08\u53c2\u52a0\u8005',data:ms.map(function(m){return mp[m].cumulative}),type:'line',borderColor:COLORS.green,backgroundColor:COLORS.greenBg,pointBackgroundColor:COLORS.green,pointRadius:5,tension:.3,yAxisID:'y1',order:1,borderWidth:2}
+    ]},options:{responsive:true,scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,title:{display:true,text:'\u4eba\u6570'},grid:{color:'#f3f4f6'}},y1:{position:'right',beginAtZero:true,title:{display:true,text:'\u7d2f\u8a08'},grid:{display:false}}}}})
+  })()
+}
+
+if(DATA.monthly_tools && document.getElementById('chartToolTrend')){
+  (function(){
+    var mt=DATA.monthly_tools,ms=Object.keys(mt),
+        ls=ms.map(function(m){return m.replace(/^\d{4}-/,'')+'\u6708'});
+    var tools=Object.keys(mt[ms[0]]||{});
+    var datasets=tools.map(function(t,i){return {label:t,data:ms.map(function(m){return (mt[m]||{})[t]||0}),backgroundColor:palette[i%palette.length],borderColor:palette[i%palette.length],borderWidth:2,tension:.3,fill:false}});
+    new Chart(document.getElementById('chartToolTrend'),{type:'line',data:{labels:ls,datasets:datasets},options:{responsive:true,scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#f3f4f6'}}},plugins:{legend:{position:'top',labels:{font:{size:11}}}}}})
+  })()
+}
+
+</script>
+</body>
+</html>
